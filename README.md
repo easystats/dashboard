@@ -10,6 +10,6 @@ The goal of {dashboard} is to present an overview of
 open-source activity of the easystats team.
 
 This is adapted from [ThinkR-open
-dashboard](https://github.com/ThinkR-open/dashboard), which itself
+dashboard](https://github.com/ThinkR-open/thinkrdashboard), which itself
 relies on [Jim Hester tidyverse
 Dashboard](https://github.com/jimhester/tidyversedashboard).
