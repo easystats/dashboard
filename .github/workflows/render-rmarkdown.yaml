@@ -55,7 +55,7 @@ jobs:
 
       - name: Render Rmarkdown files
         run: |
-          rmarkdown::render("easystats-dashboard.Rmd", output_dir = "public")
+          rmarkdown::render("dashboard.Rmd", output_dir = "public")
         shell: Rscript {0}
 
       - name: Deploy

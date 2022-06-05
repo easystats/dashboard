@@ -1,11 +1,11 @@
-Package: thinkrdashboard
+Package: dashboard
 Title: {{ Title }}
 Version: 1.0.0
 Authors@R: 
-    person(given = "Sébastien",
-           family = "Rochette",
+    person(given = "Etienne",
+           family = "Bacher",
            role = c("aut", "cre"),
-           email = "sebastien@thinkr.fr")
+           email = "etienne.bacher@protonmail.com")
 Description: {{ Description }}
 License: MIT + file LICENSE
 URL: {{ URL }}
