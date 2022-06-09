@@ -253,12 +253,16 @@ issue_progress_table <- issue_data2 %>%
 
 names(issue_progress_table) <- tools::toTitleCase(names(issue_progress_table))
   
-reactable(issue_progress_table[, -4], columns = list(
-  Maintainer = colDef(cell = function(value, index) {
+reactable(
+  issue_progress_table[, -4], 
+  columns = list(
+    Maintainer = colDef(cell = function(value, index) {
       url <- paste0("mailto: ", issue_progress_table[index, "Maintainer_email"])
       htmltools::tags$a(href = url, as.character(value))
     })
-  )
+  ),
+  groupBy = c("Package", "Type"),
+  defaultPageSize = 11
 )
 ```
 
