@@ -40,6 +40,8 @@ library(tibble)
 library(codetools) # there was a weird error on connect that needed this
 library(DT)
 # remotes::install_github("ThinkR-open/tidyversedashboard", ref = "zero-issues")
+library(reactable)
+library(fontawesome)
 library(tidyversedashboard)
 library(tidyr)
 library(sparkline)
@@ -240,13 +242,24 @@ issue_progress_table <- issue_data2 %>%
   # Add maintiner to the table
     left_join(mutate(repo_summary, maintainer = desc_maintainer(description)) %>%
               select(repo, maintainer), by = c("package" = "repo")) %>%
+  separate(col = "maintainer", into = c("maintainer", "maintainer_email"), sep = " <") %>% 
+  mutate(
+    maintainer_email = gsub(">", "", maintainer_email)
+  ) %>% 
   # group_by(type, status) %>%
   arrange(event) %>%
-  select(package, issue, maintainer, event, status, type) %>%
+  select(package, issue, maintainer, maintainer_email, event, status, type) %>%
   na.omit()
-  
 
-data_table(issue_progress_table)
+names(issue_progress_table) <- tools::toTitleCase(names(issue_progress_table))
+  
+reactable(issue_progress_table[, -4], columns = list(
+  Maintainer = colDef(cell = function(value, index) {
+      url <- paste0("mailto: ", issue_progress_table[index, "Maintainer_email"])
+      htmltools::tags$a(href = url, as.character(value))
+    })
+  )
+)
 ```
 
 > Issues with status modified (`r dashboard_start` - `r now()`).
