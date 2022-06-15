@@ -35,17 +35,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ubuntu-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ubuntu-${{ hashFiles('.github/R-version') }}-1-
-          
-      - name: Install system dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install -y libmagick++-dev
-          while read -r cmd
-          do
-            eval sudo $cmd
-          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
+          key: macos-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: macos-${{ hashFiles('.github/R-version') }}-1-
           
       - name: Render Rmarkdown files
         run: |
