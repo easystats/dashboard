@@ -25,6 +25,7 @@ Imports:
     lubridate,
     purrr,
     reactable,
+    rmarkdown,
     scales,
     tibble,
     tidyr,
