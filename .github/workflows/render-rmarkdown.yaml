@@ -34,8 +34,7 @@ jobs:
         run: |
           install.packages(c("cranlogs", "htmltools", "httr2", "flexdashboard", "gh", "jsonlite", "lubridate", "dplyr", "purrr", "tibble", "reactable", "fontawesome", "tidyversedashboard", "tidyr"))
           remotes::install_github("ThinkR-open/tidyversedashboard", ref = "zero-issues")
-          install.packages(c("bayestestR", "correlation", "datawizard", "easystats", "effectsize", "insight",
-                "modelbased", "parameters", "performance", "report", "see"))
+          install.packages("easystats", repos = "https://easystats.r-universe.dev")
           rmarkdown::render("dashboard.Rmd", output_dir = "public")
         shell: Rscript {0}
 
