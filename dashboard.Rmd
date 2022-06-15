@@ -36,19 +36,14 @@ library(flexdashboard)
 library(gh)
 library(jsonlite)
 library(lubridate)
-library(forcats)
 library(dplyr)
 library(purrr)
 library(tibble)
-library(codetools) # there was a weird error on connect that needed this
-library(DT)
 # remotes::install_github("ThinkR-open/tidyversedashboard", ref = "zero-issues")
 library(reactable)
 library(fontawesome)
 library(tidyversedashboard)
 library(tidyr)
-library(sparkline)
-library(ggplot2)
 
 gh_colors <- list(
   green = "#2cbe4e",
