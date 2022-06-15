@@ -29,6 +29,10 @@ title: "`r params$title`"
 ```{r setup, include = FALSE}
 # knitr::opts_chunk$set(eval = FALSE, cache = TRUE)
 
+library(cranlogs)
+library(gt)
+library(gtExtras)
+library(httr2)
 library(flexdashboard)
 library(gh)
 library(jsonlite)
@@ -56,8 +60,6 @@ dashboard_duration <- format(today() - dashboard_start, format = "%d")
 orgs <- scan(text = params$orgs, what = "character", sep = ",", strip.white = TRUE, quiet = TRUE)
 privacy <- normalize_privacy(params$privacy)
 
-# plus1 emoji
-p1 <- "\U0001f44d"
 ```
 
 ```{r remaining, message=FALSE}
@@ -142,19 +144,106 @@ repo_data <- map(orgs, org_data, privacy)
 # Keep only repo where we are owners
 repo_summary <- map_dfr(repo_data, "summary") %>% 
   distinct(owner, repo, .keep_all = TRUE) %>% 
-  filter(tolower(owner) %in% tolower(orgs))
-issues <- map_dfr(repo_data, "issues") %>% 
-  distinct(owner, repo, issue, .keep_all = TRUE) %>% 
-  filter(tolower(owner) %in% tolower(orgs))
+  filter(tolower(owner) %in% tolower(orgs)) %>%
+  select(-owner, -description, -p1, -features, -bugs, -unlabeled)
 
-# Get remaining
-wait_for_rate(1)
+downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>% 
+  group_by(package) %>% 
+  mutate(downloads_last_week = sum(count)) %>% 
+  ungroup() %>% 
+  select(package, downloads_last_week) %>% 
+  distinct()
+
+# coverage <- request("https://codecov.io/api/gh/easystats") %>%
+#   req_headers("Authorization" = Sys.getenv("CODECOV_TOKEN")) %>% 
+#   req_perform() %>% 
+#   resp_body_json() %>%
+#   dplyr::bind_rows() %>% 
+#   select(name, coverage) %>% 
+#   distinct() %>% 
+#   filter(!is.na(coverage))
+
+coverage <- data.frame(
+  repo = repo_summary$repo,
+  badge = coverage_status_badge("easystats", repo_summary$repo)
+)
+
+repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>% 
+  left_join(coverage, by = "repo") %>% 
+  rename(
+    Repository = repo,
+    "Main branch" = default_branch,
+    "Open PRs" = prs,
+    Stars = watchers,
+    "Open issues" = open_issues,
+    "Downloads last week" = downloads_last_week,
+    Badge = badge
+  ) %>% 
+  mutate(Badge = ifelse(`Main branch` == "master", gsub("main", "master", Badge), Badge))
+
+
+reactable(
+  repo_summary,
+  searchable = TRUE,
+  defaultPageSize = nrow(repo_summary),
+  columns = list(
+    `Downloads last week` = colDef(
+      format = colFormat(separators = TRUE)
+    ),
+    Badge = colDef(
+      html = TRUE,
+      cell = JS("function(cellInfo) {
+        return cellInfo.value
+      }")
+    )
+  ),
+  theme = reactableTheme(
+    headerStyle = list(
+      "&:hover[aria-sort]" = list(background = "hsl(0, 0%, 96%)"),
+      "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
+      borderColor = "#555"
+    ),
+    style = list(
+      fontFamily = "Work Sans, Helvetica Neue, Helvetica, Arial, sans-serif",
+      fontSize = "0.875rem",
+      "a" = list(
+        color = "#000000",
+        textDecoration = "none",
+        "&:hover, &:focus" = list(
+          textDecoration = "underline",
+          textDecorationThickness = "1px"
+        )
+      ),
+      ".number" = list(
+        color = "#666666",
+        fontFamily = "Source Code Pro, Consolas, Monaco, monospace"
+      ),
+      ".tag" = list(
+        padding = "0.125rem 0.25rem",
+        color = "hsl(0, 0%, 40%)",
+        fontSize = "0.75rem",
+        border = "1px solid hsl(0, 0%, 24%)",
+        borderRadius = "2px",
+        textTransform = "uppercase"
+      )
+    )
+  )
+)
+
 ```
 
 
 `r dashboard_duration` issue progress
 =====================================
 ```{r issue_progress, include = FALSE, message=FALSE}
+
+issues <- map_dfr(repo_data, "issues") %>% 
+  distinct(owner, repo, issue, .keep_all = TRUE) %>% 
+  filter(tolower(owner) %in% tolower(orgs))
+
+# Get remaining
+wait_for_rate(1)
+
 # Requires ~20 points for rate limitation
 wait_for_rate(15)
 
@@ -326,16 +415,16 @@ summary_table <- repo_summary %>%
 
 ```{r, eval=FALSE}
 # Get codecov % coverage
-# library(httr2)
-# req <- request("https://codecov.io/api/gh/easystats") %>% 
-#   req_headers("Authorization" = Sys.getenv("CODECOV_TOKEN"))
-# req
-# 
-# resp <- req_perform(req)
-# resp
-# resp %>%
-#   resp_body_json() %>% 
-#   dplyr::bind_rows()
+library(httr2)
+req <- request("https://codecov.io/api/gh/easystats") %>%
+  req_headers("Authorization" = Sys.getenv("CODECOV_TOKEN"))
+req
+
+resp <- req_perform(req)
+resp
+resp %>%
+  resp_body_json() %>%
+  dplyr::bind_rows()
 ```
 
 
