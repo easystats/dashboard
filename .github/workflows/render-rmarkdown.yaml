@@ -32,6 +32,7 @@ jobs:
 
       - name: Render Rmarkdown files
         run: |
+          install.packages("rmarkdown")
           rmarkdown::render("dashboard.Rmd", output_dir = "public")
         shell: Rscript {0}
 
