@@ -32,7 +32,7 @@ jobs:
 
       - name: Render Rmarkdown files
         run: |
-          install.packages("cranlogs", "htmltools", "httr2", "flexdashboard", "gh", "jsonlite", "lubridate", "dplyr", "purrr", "tibble", "reactable", "fontawesome", "tidyversedashboard", "tidyr")
+          install.packages(c("cranlogs", "htmltools", "httr2", "flexdashboard", "gh", "jsonlite", "lubridate", "dplyr", "purrr", "tibble", "reactable", "fontawesome", "tidyversedashboard", "tidyr"))
           remotes::install_github("ThinkR-open/tidyversedashboard", ref = "zero-issues")
           rmarkdown::render("dashboard.Rmd", output_dir = "public")
         shell: Rscript {0}
