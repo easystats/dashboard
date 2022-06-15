@@ -192,8 +192,12 @@ downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$r
 
 coverage <- data.frame(
   repo = repo_summary$repo,
-  badge = coverage_status_badge("easystats", repo_summary$repo)
+  coverage_badge = coverage_status_badge("easystats", repo_summary$repo),
+  check_badge = github_status_badge("easystats", repo_summary$repo)
 )
+
+change_check_badge <- c("correlation", "datawizard", "easystats", "effectsize", "insight",
+                        "parameters", "performance", "report", "see")
 
 repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>% 
   left_join(coverage, by = "repo") %>% 
@@ -205,9 +209,13 @@ repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %
     Stars = watchers,
     "Open issues" = open_issues,
     "Downloads last week" = downloads_last_week,
-    Coverage = badge
+    Coverage = coverage_badge,
+    `R CMD check` = check_badge
   ) %>% 
-  mutate(Coverage = ifelse(`Main branch` == "master", gsub("main", "master", Coverage), Coverage)) %>% 
+  mutate(
+    Coverage = ifelse(`Main branch` == "master", gsub("main", "master", Coverage), Coverage),
+    `R CMD check` = ifelse(Repository %in% change_check_badge, gsub("R-CMD-CHECK|R-CMD-check", "R-check", `R CMD check`), `R CMD check`)
+  ) %>% 
   arrange(Repository)
 
 reactable(
@@ -218,6 +226,12 @@ reactable(
       format = colFormat(separators = TRUE)
     ),
     Coverage = colDef(
+      html = TRUE,
+      cell = JS("function(cellInfo) {
+        return cellInfo.value
+      }")
+    ),
+    `R CMD check` = colDef(
       html = TRUE,
       cell = JS("function(cellInfo) {
         return cellInfo.value
@@ -262,257 +276,78 @@ reactable(
 ```
 
 
-<!-- `r dashboard_duration` issue progress -->
-<!-- ===================================== -->
-<!-- ```{r issue_progress, include = FALSE, message=FALSE} -->
+Open issues
+===========
+```{r issue_summary}
+substitute_emoji <- function(x) {
+  m <- gregexpr(":[^[:space:]]+:", x)
 
-<!-- issues <- map_dfr(repo_data, "issues") %>%  -->
-<!--   distinct(owner, repo, issue, .keep_all = TRUE) %>%  -->
-<!--   filter(tolower(owner) %in% tolower(orgs)) -->
+  regmatches(x, m) <- lapply(regmatches(x, m), function(xx) map_chr(gsub(":", "", xx), purrr::possibly(emo::ji, "")))
+  x
+}
 
-<!-- # Get remaining -->
-<!-- wait_for_rate(1) -->
+issues <- map_dfr(repo_data, "issues") %>%
+  distinct(owner, repo, issue, .keep_all = TRUE) %>%
+  filter(tolower(owner) %in% tolower(orgs))
 
-<!-- # Requires ~20 points for rate limitation -->
-<!-- wait_for_rate(15) -->
+# linkify the titles, and replace emoji
+issue_table <- issues %>%
+  mutate(
+    title = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{title}</a>'),
+    # Modify issue after title
+    issue = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{issue}</a>'),
+    labels = substitute_emoji(map_chr(labels, paste, collapse = ", "))
+  ) %>%
+  select(-owner) %>% 
+  rename(
+    Repository = repo,
+    Issue = issue,
+    Title = title,
+    Updated = updated
+  ) %>% 
+  select(-p1)
 
-<!-- # Keep only repo where we are owners -->
-<!-- issue_data_orig <- map_dfr(orgs, issue_progress, dashboard_start, privacy) -->
-
-<!-- issue_data2 <- issue_data_orig %>%  -->
-<!--   distinct(owner, package, type, issue, .keep_all = TRUE) %>%  -->
-<!--   filter(tolower(owner) %in% tolower(orgs)) %>%  -->
-<!--   mutate( -->
-<!--     type = factor(levels = c("issue", "pull_request"), -->
-<!--       case_when( -->
-<!--         type == "Issue" ~ "issue", -->
-<!--         type == "PullRequest" ~ "pull_request")), -->
-
-<!--     status = factor(levels = c("opened", "closed", "merged"), -->
-<!--       case_when( -->
-<!--         merged >= dashboard_start ~ "merged", -->
-<!--         closed >= dashboard_start ~ "closed", -->
-<!--         opened >= dashboard_start ~ "opened", -->
-<!--         TRUE ~ NA_character_)), -->
-<!--     event = case_when( -->
-<!--       status == "merged" ~ merged, -->
-<!--       status == "closed" ~ closed, -->
-<!--       status == "opened" ~ opened) -->
-<!--   ) -->
-
-<!-- # Get remaining -->
-<!-- wait_for_rate(1) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- totals <- issue_data2 %>% group_by(type, status) %>% tally() %>% mutate(n = if_else(status == "closed" | status == "merged", n * -1L, n)) %>% tidyr::drop_na() -->
-<!-- ``` -->
-
-
-<!-- Row -->
-<!-- ------------------------------ -->
-
-<!-- ### `r dashboard_duration` Issues / pull requests opened -->
-<!-- ```{r} -->
-<!-- valueBox(totals %>% filter(status == "opened") %>% pull("n") %>% sum(), icon = "fa-exclamation-circle", color = "success") -->
-<!-- ``` -->
-
-<!-- ### `r dashboard_duration` Issues closed -->
-<!-- ```{r} -->
-<!-- valueBox(totals %>% filter(type == "issue", status == "closed") %>% pull("n") %>% abs(), icon = "fa-times-circle", color = "danger") -->
-<!-- ``` -->
-
-<!-- ### `r dashboard_duration` Pull requests merged / closed -->
-<!-- ```{r} -->
-<!-- valueBox(totals %>% filter(type == "pull_request" & (status == "merged" | status == "closed")) %>% pull("n") %>% sum() %>% abs(), icon = "ion-merge", color = "info") -->
-<!-- ``` -->
-
-<!-- ### `r dashboard_duration` issues/pull requests change -->
-<!-- ```{r} -->
-<!-- change <- sum(totals$n) -->
-<!-- valueBox(change, icon = "fa-exclamation-circle", color = if (change < 0) "success" else "danger") -->
-<!-- ``` -->
-
-<!-- ### Total remaining open issues -->
-<!-- ```{r} -->
-<!-- valueBox(nrow(issues), icon = "fa-exclamation-circle") -->
-<!-- ``` -->
-
-<!-- ### Total remaining open pull requests -->
-<!-- ```{r} -->
-<!-- if (!is.null(pr_data)) { -->
-<!--   pr_data %>%  -->
-<!--     filter(is.na(closed)) %>%  -->
-<!--     nrow() %>%  -->
-<!--     valueBox(., icon = "fa-exclamation-circle") -->
-<!-- } else { -->
-<!--   valueBox("?", icon = "fa-exclamation-circle") -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- Row -->
-<!-- ------------------------------------- -->
-
-<!-- ### `r dashboard_duration` progess -->
-
-<!-- ```{r} -->
-<!-- issue_progress_table <- issue_data2 %>% -->
-<!--   # Add maintiner to the table -->
-<!--     left_join(mutate(repo_summary, maintainer = desc_maintainer(description)) %>% -->
-<!--               select(repo, maintainer), by = c("package" = "repo")) %>% -->
-<!--   separate(col = "maintainer", into = c("maintainer", "maintainer_email"), sep = " <") %>%  -->
-<!--   mutate( -->
-<!--     maintainer_email = gsub(">", "", maintainer_email) -->
-<!--   ) %>%  -->
-<!--   # group_by(type, status) %>% -->
-<!--   arrange(event) %>% -->
-<!--   select(package, issue, maintainer, maintainer_email, event, status, type) %>% -->
-<!--   na.omit() -->
-
-<!-- names(issue_progress_table) <- tools::toTitleCase(names(issue_progress_table)) -->
-
-<!-- reactable( -->
-<!--   issue_progress_table[, -4],  -->
-<!--   columns = list( -->
-<!--     Maintainer = colDef(cell = function(value, index) { -->
-<!--       url <- paste0("mailto: ", issue_progress_table[index, "Maintainer_email"]) -->
-<!--       htmltools::tags$a(href = url, as.character(value)) -->
-<!--     }) -->
-<!--   ), -->
-<!--   groupBy = c("Package", "Type"), -->
-<!--   defaultPageSize = 11 -->
-<!-- ) -->
-<!-- ``` -->
-
-<!-- > Issues with status modified (`r dashboard_start` - `r now()`). -->
-
-<!-- ### `r dashboard_duration`-day progress summary -->
-
-<!-- ```{r} -->
-<!-- issue_data3 <- issue_data2 %>%  -->
-<!--   filter(!is.na(event)) %>%  -->
-<!--   select(event, owner, package, num = issue, type, status) %>%  -->
-<!--   mutate( -->
-<!--     date = as.Date(event), -->
-<!--     event = NULL, -->
-<!--     n = if_else(status %in% c("closed", "merged"), -1, 1) -->
-<!--   ) -->
-
-<!-- daily <- issue_data3 %>%  -->
-<!--   group_by(date, type, status) %>%  -->
-<!--   summarise(n = sum(n), .groups = "drop") -->
-
-<!-- daily %>%  -->
-<!--   mutate(status = fct_relevel(status, "opened", "merged")) %>%  -->
-<!--   ggplot(aes(date, n, fill = type)) +  -->
-<!--   geom_col() + -->
-<!--   facet_grid(status ~ ., scales = "free_y", space = "free") + -->
-<!--   labs( -->
-<!--     title = "Daily changes in issues and PRs", -->
-<!--     x = NULL, -->
-<!--     y = NULL -->
-<!--   ) +  -->
-<!--   scale_y_continuous(breaks = scales::breaks_width(20), expand = c(0, 5)) + -->
-<!--   scale_fill_brewer(palette = "Set1", guide = NULL) +  -->
-<!--   scale_x_date(date_breaks = "1 month", date_labels = "%b %d", date_minor_breaks = "1 week") + -->
-<!--   theme_bw() + -->
-<!--   theme(panel.grid.major.x = element_line(colour = "grey40")) -->
-<!-- ``` -->
-
-<!-- > `r dashboard_start` - `r now()` -->
-
-<!-- Repository summary -->
-<!-- ===================================== -->
-
-
-
-<!-- ```{r repo_summary} -->
-<!-- summary_table <- repo_summary %>% -->
-<!--   rename("package" = "repo") %>% -->
-<!--   mutate( -->
-<!--     weekly_downloads = num_downloads(.$package, "last-week"), -->
-<!--     maintainer = desc_maintainer(description), -->
-<!--     reverse_deps = reverse_dependencies(package), -->
-<!--     dev_deps = desc_dev_deps(description), -->
-<!--     github_status = github_status_badge(owner, package), -->
-<!--     cran_status = cran_status_badge(package), -->
-<!--     coverage_status = coverage_status_badge(owner, package, default = default_branch), -->
-<!--     activity = map2(owner, package, weekly_commits)) %>% -->
-<!--   select(package, maintainer, watchers, reverse_deps, weekly_downloads, open_issues, prs, p1, everything(), -description) %>% -->
-<!--   rename(!!p1 := p1) -->
-<!-- ``` -->
-
-<!-- ```{r, eval=FALSE} -->
-<!-- # Get codecov % coverage -->
-<!-- library(httr2) -->
-<!-- req <- request("https://codecov.io/api/gh/easystats") %>% -->
-<!--   req_headers("Authorization" = Sys.getenv("CODECOV_TOKEN")) -->
-<!-- req -->
-
-<!-- resp <- req_perform(req) -->
-<!-- resp -->
-<!-- resp %>% -->
-<!--   resp_body_json() %>% -->
-<!--   dplyr::bind_rows() -->
-<!-- ``` -->
-
-
-<!-- ```{r} -->
-<!-- # A custom datatable with a sparkline column -->
-<!-- dt <- sparkline_table( -->
-<!--   summary_table, -->
-<!--   sparkline_column = which(colnames(summary_table) == "activity"), -->
-<!--   colnames = c("52 week commit activity" = "activity")) -->
-<!-- dt -->
-<!-- ``` -->
-
-<!-- Open issues -->
-<!-- ===================================== -->
-<!-- ```{r issue_summary} -->
-<!-- substitute_emoji <- function(x) { -->
-<!--   m <- gregexpr(":[^[:space:]]+:", x) -->
-
-<!--   regmatches(x, m) <- lapply(regmatches(x, m), function(xx) map_chr(gsub(":", "", xx), purrr::possibly(emo::ji, ""))) -->
-<!--   x -->
-<!-- } -->
-
-<!-- # linkify the titles, and replace emoji -->
-<!-- issue_table <- issues %>%  -->
-<!--   mutate( -->
-<!--     title = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{title}</a>'), -->
-<!--     # Modify issue after title -->
-<!--     issue = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{issue}</a>'), -->
-<!--     # Modify repo after issue -->
-<!--     repo = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}">{repo}</a>'), -->
-<!--     labels = substitute_emoji(map_chr(labels, paste, collapse = ", ")) -->
-<!--   ) %>% -->
-<!--   select(-owner) %>% -->
-<!--   rename(!!p1 := p1) -->
-
-<!-- data_table(issue_table) -->
-<!-- ``` -->
-
-<!-- `r dashboard_duration` pull request summary -->
-<!-- ===================================== -->
-
-
-<!-- ### PR authors -->
-<!-- ```{r} -->
-<!-- data_table(pr_authors) -->
-<!-- ``` -->
-
-<!-- ### PR reviewers -->
-<!-- ```{r} -->
-<!-- data_table(pr_reviewers) -->
-<!-- ``` -->
-
-<!-- ### PR pairs -->
-<!-- ```{r} -->
-<!-- data_table(pr_pairs) -->
-<!-- ``` -->
-
-<!-- ```{r include=FALSE, message=FALSE} -->
-<!-- # Get remaining -->
-<!-- wait_for_rate(1) -->
-<!-- ``` -->
+reactable(
+  issue_table,
+  searchable = TRUE,
+  pagination = FALSE, 
+  highlight = TRUE,
+  filterable = TRUE,
+  columns = list(
+    Issue = colDef(html = TRUE),
+    Title = colDef(html = TRUE)
+  ),
+  theme = reactableTheme(
+    headerStyle = list(
+      "&:hover[aria-sort]" = list(background = "hsl(0, 0%, 96%)"),
+      "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
+      borderColor = "#555"
+    ),
+    style = list(
+      fontFamily = "Work Sans, Helvetica Neue, Helvetica, Arial, sans-serif",
+      fontSize = "1.25rem",
+      "a" = list(
+        color = "#000000",
+        textDecoration = "none",
+        "&:hover, &:focus" = list(
+          textDecoration = "underline",
+          textDecorationThickness = "1px"
+        )
+      ),
+      ".number" = list(
+        color = "#666666",
+        fontFamily = "Source Code Pro, Consolas, Monaco, monospace"
+      ),
+      ".tag" = list(
+        padding = "0.125rem 0.25rem",
+        color = "hsl(0, 0%, 40%)",
+        fontSize = "1.25rem",
+        border = "1px solid hsl(0, 0%, 24%)",
+        borderRadius = "2px",
+        textTransform = "uppercase"
+      )
+    )
+  )
+)
+```
 
