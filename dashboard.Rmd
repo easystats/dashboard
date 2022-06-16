@@ -165,8 +165,7 @@ row_details <- function(index) {
       if (grepl("https?://", url)) tags$a(href = url, url)
       else if (identical(url, ",")) ", "
       else url
-    })),
-    pkg_field("Last Built", pkg$Built),
+    }))
   )
 
   detail
