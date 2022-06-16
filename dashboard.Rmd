@@ -179,6 +179,20 @@ repo_summary <- map_dfr(repo_data, "summary") %>%
   filter(tolower(owner) %in% tolower(orgs), repo %in% main_repos) %>%
   select(-owner, -description, -p1, -features, -bugs, -unlabeled)
 
+last_published_cran <- data.frame(
+  repo = repo_summary$repo
+)
+
+for (i in seq_along(repo_summary$repo)) {
+  if (repo_summary$repo[i] == "easystats") next
+  
+  cran_page <- readLines(paste0("https://cran.r-project.org/web/packages/", repo_summary$repo[i], "/index.html"))
+  date <- cran_page[which(startsWith(cran_page, "<td>Published"))+1]
+  date <- gsub("<td>", "", date)
+  date <- gsub("</td>", "", date)
+  last_published_cran[i, "last_published_cran"] <- date
+}
+
 downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>% 
   group_by(package) %>% 
   mutate(downloads_last_week = sum(count)) %>% 
@@ -196,11 +210,13 @@ change_check_badge <- c("correlation", "datawizard", "easystats", "effectsize", 
                         "parameters", "performance", "report", "see")
 
 repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>% 
+  left_join(last_published_cran, by = "repo") %>% 
   left_join(coverage, by = "repo") %>% 
-  select(repo, default_branch, watchers, open_issues, prs, everything()) %>% 
+  select(repo, default_branch, last_published_cran, watchers, open_issues, prs, everything()) %>% 
   rename(
     Repository = repo,
     "Main branch" = default_branch,
+    "Last published on CRAN" = last_published_cran,
     "Open PRs" = prs,
     Stars = watchers,
     "Open issues" = open_issues,
@@ -217,6 +233,10 @@ repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %
 reactable(
   repo_summary,
   defaultPageSize = nrow(repo_summary),
+  defaultColDef = colDef(
+    align = "center",
+    minWidth = 70
+  ),
   columns = list(
     `Downloads last week` = colDef(
       format = colFormat(separators = TRUE)
@@ -228,6 +248,7 @@ reactable(
       }")
     ),
     `R CMD check` = colDef(
+      minWidth = 100,
       html = TRUE,
       cell = JS("function(cellInfo) {
         return cellInfo.value
