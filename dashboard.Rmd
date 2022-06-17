@@ -366,3 +366,87 @@ reactable(
 )
 ```
 
+
+Open PRs
+===========
+```{r pr_summary}
+prs <- pr_data %>% 
+  filter(is.na(closed)) %>% 
+  mutate(n_comments = unlist(map(comments, nrow)))
+
+prs_2 <- list()
+for (i in main_repos) {
+  prs_2[[i]] <- gh::gh("/repos/:repo/pulls?state=OPEN", repo = paste0("easystats/", i)) %>% 
+    tibble(
+      repo = i,
+      number = map_int(., "number"),
+      title = map_chr(., "title"),
+      url = map_chr(., "html_url"),
+      draft = as.logical(map_chr(., "draft"))
+    ) %>% 
+    select(-1)
+}
+prs_2 <- do.call(rbind, prs_2)
+
+  
+pr_table <- prs %>%
+  left_join(prs_2, by = c("repo", "issue" = "number")) %>% 
+  mutate(
+    title = paste0("<a href='", url, "' target = '_blank'>", title, "</a>"),
+    draft = ifelse(draft, "Yes", "No")
+  ) %>% 
+  select(repo, issue, title, author, created, updated, n_comments, draft) %>% 
+  rename(
+    Repository = repo,
+    PR = issue,
+    Title = title,
+    Author = author,
+    Created = created,
+    Updated = updated,
+    "# of comments" = n_comments,
+    Draft = draft
+  )
+
+reactable(
+  pr_table,
+  searchable = TRUE,
+  pagination = FALSE, 
+  highlight = TRUE,
+  filterable = TRUE,
+  columns = list(
+    Title = colDef(html = TRUE)
+  ),
+  theme = reactableTheme(
+    headerStyle = list(
+      "&:hover[aria-sort]" = list(background = "hsl(0, 0%, 96%)"),
+      "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
+      borderColor = "#555"
+    ),
+    style = list(
+      fontFamily = "Work Sans, Helvetica Neue, Helvetica, Arial, sans-serif",
+      fontSize = "1.25rem",
+      "a" = list(
+        color = "#000000",
+        textDecoration = "none",
+        "&:hover, &:focus" = list(
+          textDecoration = "underline",
+          textDecorationThickness = "1px"
+        )
+      ),
+      ".number" = list(
+        color = "#666666",
+        fontFamily = "Source Code Pro, Consolas, Monaco, monospace"
+      ),
+      ".tag" = list(
+        padding = "0.125rem 0.25rem",
+        color = "hsl(0, 0%, 40%)",
+        fontSize = "1.25rem",
+        border = "1px solid hsl(0, 0%, 24%)",
+        borderRadius = "2px",
+        textTransform = "uppercase"
+      )
+    )
+  )
+)
+```
+
