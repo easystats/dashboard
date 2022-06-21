@@ -303,24 +303,45 @@ substitute_emoji <- function(x) {
 
 issues <- map_dfr(repo_data, "issues") %>%
   distinct(owner, repo, issue, .keep_all = TRUE) %>%
-  filter(tolower(owner) %in% tolower(orgs))
+  filter(tolower(owner) %in% tolower(orgs)) %>% 
+  select(-updated)
+
+issues_2 <- list()
+for (i in main_repos) {
+  issues_2[[i]] <- gh::gh("/repos/:repo/issues?state=open", repo = paste0("easystats/", i)) %>% 
+    tibble(
+      repo = i,
+      author = map(., "user") %>% 
+        map_chr(., "login"),
+      created = map_chr(., "created_at"),
+      updated = map_chr(., "updated_at"),
+      issue = map_int(., "number")
+    ) %>% 
+    select(-1)
+}
+issues_2 <- do.call(rbind, issues_2)
 
 # linkify the titles, and replace emoji
 issue_table <- issues %>%
+  left_join(issues_2, by = c("repo", "issue")) %>% 
   mutate(
     title = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{title}</a>'),
     # Modify issue after title
     issue = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{issue}</a>'),
     labels = substitute_emoji(map_chr(labels, paste, collapse = ", "))
   ) %>%
-  select(-owner) %>% 
+  select(repo, issue, title, author, created, updated, labels) %>% 
   rename(
     Repository = repo,
     Issue = issue,
+    Author = author,
     Title = title,
-    Updated = updated
-  ) %>% 
-  select(-p1)
+    Created = created,
+    Updated = updated,
+    Labels = labels
+  )
+
+issue_table <- issue_table[order(issue_table$Updated, decreasing = TRUE), ]
 
 reactable(
   issue_table,
@@ -406,6 +427,8 @@ pr_table <- prs %>%
     "# of comments" = n_comments,
     Draft = draft
   )
+
+pr_table <- pr_table[order(pr_table$Updated, decreasing = TRUE), ]
 
 reactable(
   pr_table,
