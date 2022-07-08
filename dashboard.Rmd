@@ -141,6 +141,7 @@ Overview
 # Requires ~700 points for rate limitation
 wait_for_rate(650)
 
+# Function to obtain details about each package (version, deps...)
 row_details <- function(index) {
   pkg <- packageDescription(main_repos[index])
   urls <- unlist(strsplit(gsub(",", " , ", pkg$URL[1], perl = TRUE), "[ \n]"))
@@ -171,6 +172,7 @@ row_details <- function(index) {
   detail
 }
 
+# Get data on each repo
 repo_data <- map(orgs, org_data, privacy)
 
 repo_summary <- map_dfr(repo_data, "summary") %>% 
@@ -178,13 +180,13 @@ repo_summary <- map_dfr(repo_data, "summary") %>%
   filter(tolower(owner) %in% tolower(orgs), repo %in% main_repos) %>%
   select(-owner, -description, -p1, -features, -bugs, -unlabeled)
 
+### Find last published date on CRAN for each repo
 last_published_cran <- data.frame(
   repo = repo_summary$repo
 )
 
 for (i in seq_along(repo_summary$repo)) {
   if (repo_summary$repo[i] == "easystats") next
-  
   cran_page <- readLines(paste0("https://cran.r-project.org/web/packages/", repo_summary$repo[i], "/index.html"))
   date <- cran_page[which(startsWith(cran_page, "<td>Published"))+1]
   date <- gsub("<td>", "", date)
@@ -192,6 +194,7 @@ for (i in seq_along(repo_summary$repo)) {
   last_published_cran[i, "last_published_cran"] <- date
 }
 
+### Get number of downloads in last 7 days
 downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>% 
   group_by(package) %>% 
   mutate(downloads_last_week = sum(count)) %>% 
@@ -199,6 +202,7 @@ downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$r
   select(package, downloads_last_week) %>% 
   distinct()
 
+### Get coverage info
 coverage <- data.frame(
   repo = repo_summary$repo,
   coverage_badge = coverage_status_badge("easystats", repo_summary$repo),
@@ -207,6 +211,7 @@ coverage <- data.frame(
 
 change_check_badge <- c("see")
 
+### Clean data and make table
 repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>% 
   left_join(last_published_cran, by = "repo") %>% 
   left_join(coverage, by = "repo") %>% 
@@ -296,7 +301,6 @@ Open issues
 ```{r issue_summary}
 substitute_emoji <- function(x) {
   m <- gregexpr(":[^[:space:]]+:", x)
-
   regmatches(x, m) <- lapply(regmatches(x, m), function(xx) map_chr(gsub(":", "", xx), purrr::possibly(emo::ji, "")))
   x
 }
