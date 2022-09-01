@@ -186,7 +186,6 @@ last_published_cran <- data.frame(
 )
 
 for (i in seq_along(repo_summary$repo)) {
-  if (repo_summary$repo[i] == "easystats") next
   cran_page <- readLines(paste0("https://cran.r-project.org/web/packages/", repo_summary$repo[i], "/index.html"))
   date <- cran_page[which(startsWith(cran_page, "<td>Published"))+1]
   date <- gsub("<td>", "", date)
