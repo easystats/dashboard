@@ -192,13 +192,13 @@ cran_checks <- function(pkg) {
   }
 
   if (n_warnings > 0) {
-    color_warning <- "<span style=\"color: ", gh_colors$red, "\">"
+    color_warning <- paste0("<span style=\"color: ", gh_colors$red, "\">")
   } else {
     color_warning <- "<span style=\"color: black\">"
   }
 
   if (n_errors > 0) {
-    color_error <- "<span style=\"color: ", gh_colors$red, "\">"
+    color_error <- paste0("<span style=\"color: ", gh_colors$red, "\">")
   } else {
     color_error <- "<span style=\"color: black\">"
   }
