@@ -187,8 +187,9 @@ cran_checks <- function(pkg) {
   
   paste(
     n_notes, if (n_notes > 1) "Notes<br>" else "Note<br>",
-    n_warnings, if (n_warnings > 1) "Warnings<br>" else "Warning<br>",
-    n_errors, if (n_errors > 1) "Errors<br>" else "Error<br>"
+    "<span style=\"color: ", gh_colors$purple, "\">", n_warnings, if (n_warnings > 1) "Warnings</span><br>" else "Warning</span><br>",
+    "<span style=\"color: ", gh_colors$red, "\">", n_errors, if (n_errors > 1) "Errors</span><br>" else "Error</span><br>",
+    "<a href=\"", url, "\">(webpage)</a><br>"
   )
 }
 

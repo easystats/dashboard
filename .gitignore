@@ -6,3 +6,4 @@ thinkr_dashboard.html
 .Rdata
 .httr-oauth
 .DS_Store
+*.code-workspace
