@@ -206,7 +206,7 @@ cran_checks <- function(pkg) {
   }
 
   out <- paste0(
-    "<a href=\"", url, "\">",
+    "<a href=\"", url, "\" target=\"_blank\">",
     datawizard::text_concatenate(c(note, warning, error), last = ", "),
     "</a></em><br>"
   )
