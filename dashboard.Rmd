@@ -203,14 +203,18 @@ cran_checks <- function(pkg) {
     color_error <- "<span style=\"color: black\">"
   }
 
-  cran_page <- paste0("&nbsp;<a href=\"", url, "\">&#x1f517;</a>")
-  # "<em><a href=\"", url, "\">&lt;&#x1f517;&nbsp;webpage&gt;</a></em><br>"
 
-  paste0(
-    color_note, n_notes, " Note", if (n_notes > 1) "s" else "", if (n_notes > 0) cran_page else "", "</span><br>",
-    color_warning, n_warnings, " Warning", if (n_warnings > 1) "s" else "", if (n_warnings > 0) cran_page else "", "</span><br>",
-    color_error, n_errors, " Error", if (n_errors > 1) "s" else "", if (n_errors > 0) cran_page else "", "</span><br>"
+  out <- paste0(
+    color_note, n_notes, " Note", if (n_notes > 1) "s" else "", "</span><br>",
+    color_warning, n_warnings, " Warning", if (n_warnings > 1) "s" else "", "</span><br>",
+    color_error, n_errors, " Error", if (n_errors > 1) "s" else "", "</span><br>"
   )
+
+  if ((n_notes + n_warnings + n_errors) > 0) {
+    out <- paste0(out, "<em><a href=\"", url, "\">&lt;webpage&gt;&#x1f517;</a></em><br>")
+  }
+
+  out
 }
 
 # Get data on each repo
