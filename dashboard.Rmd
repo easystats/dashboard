@@ -172,6 +172,26 @@ row_details <- function(index) {
   detail
 }
 
+# Function to get info on notes, warnings and errors from CRAN checks
+cran_checks <- function(pkg) {
+  url <- sprintf("https://cloud.r-project.org/web/checks/check_results_%s.html", pkg)
+  html_page <- xml2::read_html(url)
+  html_table <- rvest::html_table(html_page)
+  check_status <- html_table[[1]]$Status
+  
+  if (all(check_status == "OK")) return("OK")
+  
+  n_notes <- length(which(check_status == "NOTE"))
+  n_warnings <- length(which(check_status %in% c("WARN", "WARNING")))
+  n_errors <- length(which(check_status == "ERROR"))
+  
+  paste(
+    n_notes, if (n_notes > 1) "Notes<br>" else "Note<br>",
+    n_warnings, if (n_warnings > 1) "Warnings<br>" else "Warning<br>",
+    n_errors, if (n_errors > 1) "Errors<br>" else "Error<br>"
+  )
+}
+
 # Get data on each repo
 repo_data <- map(orgs, org_data, privacy)
 
@@ -191,6 +211,9 @@ for (i in seq_along(repo_summary$repo)) {
   date <- gsub("<td>", "", date)
   date <- gsub("</td>", "", date)
   last_published_cran[i, "last_published_cran"] <- date
+  n_weeks <- round(as.vector(difftime(as.POSIXct(Sys.Date()), as.POSIXct(date), units = "weeks")), 1)
+  last_published_cran[i, "n_weeks"] <- n_weeks
+  last_published_cran[i, "checks"] <- cran_checks(repo_summary$repo[i])
 }
 
 ### Get number of downloads in last 7 days
@@ -214,11 +237,14 @@ change_check_badge <- c("see")
 repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>% 
   left_join(last_published_cran, by = "repo") %>% 
   left_join(coverage, by = "repo") %>% 
-  select(repo, default_branch, last_published_cran, watchers, open_issues, prs, everything()) %>% 
+  select(repo, default_branch, last_published_cran, watchers, open_issues, prs, everything()) %>%
+  relocate(n_weeks, checks, .after = last_published_cran) %>% 
   rename(
     Repository = repo,
     "Main branch" = default_branch,
     "Last published on CRAN" = last_published_cran,
+    "Weeks since last CRAN update" = n_weeks,
+    "CRAN checks" = checks,
     "Open PRs" = prs,
     Stars = watchers,
     "Open issues" = open_issues,
@@ -242,6 +268,9 @@ reactable(
   columns = list(
     `Downloads last week` = colDef(
       format = colFormat(separators = TRUE)
+    ),
+    `CRAN checks` = colDef(
+      html = TRUE
     ),
     Coverage = colDef(
       html = TRUE,
