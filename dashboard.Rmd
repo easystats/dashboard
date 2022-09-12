@@ -237,6 +237,7 @@ repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %
   left_join(last_published_cran, by = "repo") %>% 
   left_join(coverage, by = "repo") %>% 
   select(repo, last_published_cran, watchers, open_issues, prs, everything()) %>%
+  select(-default_branch) %>%
   relocate(n_weeks, checks, .after = last_published_cran) %>% 
   rename(
     Repository = repo,
