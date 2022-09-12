@@ -203,7 +203,7 @@ cran_checks <- function(pkg) {
     color_error <- "<span style=\"color: black\">"
   }
 
-  cran_page <- paste0("<a href=\"", url, "\">&#x1f517;</a>")
+  cran_page <- paste0("&nbsp;<a href=\"", url, "\">&#x1f517;</a>")
   # "<em><a href=\"", url, "\">&lt;&#x1f517;&nbsp;webpage&gt;</a></em><br>"
 
   paste0(
