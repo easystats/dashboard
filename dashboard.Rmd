@@ -179,40 +179,41 @@ cran_checks <- function(pkg) {
   html_table <- rvest::html_table(html_page)
   check_status <- html_table[[1]]$Status
   
-  if (all(check_status == "OK")) return("OK")
+  if (all(check_status == "OK")) {
+    return("<span style=\"color: #00b300\">OK</span>")
+  }
   
   n_notes <- length(which(check_status == "NOTE"))
   n_warnings <- length(which(check_status %in% c("WARN", "WARNING")))
   n_errors <- length(which(check_status == "ERROR"))
 
   if (n_notes > 0) {
-    color_note <- "<span style=\"color: blue\">"
+    text_note <- paste0(
+      "<span style=\"color: blue\">", n_notes, " Note", if (n_notes > 1) "s" else "", "</span>"
+    )
   } else {
-    color_note <- "<span style=\"color: black\">"
+    text_note <- NULL
   }
 
   if (n_warnings > 0) {
-    color_warning <- paste0("<span style=\"color: ", gh_colors$red, "\">")
+    text_warning <- paste0(
+      "<span style=\"color: orange\">", n_warnings, " Warning", if (n_warnings > 1) "s" else "", "</span>"
+    )
   } else {
-    color_warning <- "<span style=\"color: black\">"
+    text_warning <- NULL
   }
 
   if (n_errors > 0) {
-    color_error <- paste0("<span style=\"color: ", gh_colors$red, "\">")
+    text_error <- paste0(
+      "<span style=\"color: red\">", n_errors, " Error", if (n_errors > 1) "s" else "", "</span>"
+    )
   } else {
-    color_error <- "<span style=\"color: black\">"
+    text_error <- NULL
   }
 
-
-  out <- paste0(
-    color_note, n_notes, " Note", if (n_notes > 1) "s" else "", "</span><br>",
-    color_warning, n_warnings, " Warning", if (n_warnings > 1) "s" else "", "</span><br>",
-    color_error, n_errors, " Error", if (n_errors > 1) "s" else "", "</span><br>"
-  )
-
-  if ((n_notes + n_warnings + n_errors) > 0) {
-    out <- paste0(out, "<em><a href=\"", url, "\">&lt;webpage&gt;&#x1f517;</a></em><br>")
-  }
+  out <- paste0(c(text_note, text_warning, text_error, collapse = ", ")
+  out <- paste0(out, "&nbsp;<a href=\"", url, "\">&#x1f517;</a>")
+  # paste0(out, "<em><a href=\"", url, "\">&lt;webpage&gt;&#x1f517;</a></em><br>")
 
   out
 }
