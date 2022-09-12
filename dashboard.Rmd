@@ -211,7 +211,7 @@ cran_checks <- function(pkg) {
     text_error <- NULL
   }
 
-  out <- paste0(c(text_note, text_warning, text_error, collapse = ", ")
+  out <- paste0(c(text_note, text_warning, text_error), collapse = ", ")
   out <- paste0(out, "&nbsp;<a href=\"", url, "\">&#x1f517;</a>")
   # paste0(out, "<em><a href=\"", url, "\">&lt;webpage&gt;&#x1f517;</a></em><br>")
 
