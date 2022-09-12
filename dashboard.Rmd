@@ -231,6 +231,14 @@ for (i in seq_along(repo_summary$repo)) {
   date <- gsub("</td>", "", date)
   last_published_cran[i, "last_published_cran"] <- date
   n_weeks <- round(as.vector(difftime(as.POSIXct(Sys.Date()), as.POSIXct(date), units = "weeks")), 1)
+  if (n_weeks <= 4) {
+    color <- "#00b300"
+  } else if (n_weeks > 4 & n_weeks <= 8) {
+    color <- "orange"
+  } else {
+    color <- "red"
+  }
+  n_weeks <- paste("<span style=\"color:", color, "\">", n_weeks, "</span>")
   last_published_cran[i, "n_weeks"] <- n_weeks
   last_published_cran[i, "checks"] <- cran_checks(repo_summary$repo[i])
 }
@@ -282,6 +290,9 @@ reactable(
   columns = list(
     `Downloads last week` = colDef(
       format = colFormat(separators = TRUE)
+    ),
+    `Weeks since last CRAN update` = colDef(
+      html = TRUE
     ),
     `CRAN checks` = colDef(
       html = TRUE
