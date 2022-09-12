@@ -203,11 +203,13 @@ cran_checks <- function(pkg) {
     color_error <- "<span style=\"color: black\">"
   }
 
+  cran_page <- "<a href=\"", url, "\">&#x1f517;</a>"
+  # "<em><a href=\"", url, "\">&lt;&#x1f517;&nbsp;webpage&gt;</a></em><br>"
+
   paste0(
-    color_note, n_notes, if (n_notes > 1) " Notes</span><br>" else " Note</span><br>",
-    color_warning, n_warnings, if (n_warnings > 1) " Warnings</span><br>" else " Warning</span><br>",
-    color_error, n_errors, if (n_errors > 1) " Errors</span><br>" else " Error</span><br>",
-    "<em><a href=\"", url, "\">&lt;&#xf35d;webpage&gt;</a></em><br>"
+    color_note, n_notes, " Note", if (n_notes > 1) "s" else "", if (n_notes > 0) cran_page else "", "</span><br>",
+    color_warning, n_warnings, " Warning", if (n_warnings > 1) "s" else "", if (n_warnings > 0) cran_page else "", "</span><br>",
+    color_error, n_errors, " Error", if (n_errors > 1) "s" else "", if (n_errors > 0) cran_page else "", "</span><br>"
   )
 }
 
