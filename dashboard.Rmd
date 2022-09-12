@@ -239,7 +239,7 @@ for (i in seq_along(repo_summary$repo)) {
   n_weeks <- round(as.vector(difftime(as.POSIXct(Sys.Date()), as.POSIXct(date), units = "weeks")), 1)
   if (n_weeks <= 4) {
     color <- "#00b300"
-  } else if (n_weeks > 4 & n_weeks <= 8) {
+  } else if (n_weeks > 4 && n_weeks <= 8) {
     color <- "orange"
   } else {
     color <- "red"
