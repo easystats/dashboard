@@ -179,7 +179,9 @@ cran_checks <- function(pkg) {
   html_table <- rvest::html_table(html_page)
   check_status <- html_table[[1]]$Status
   
-  if (all(check_status == "OK")) return("OK")
+  if (all(check_status == "OK")) {
+    return("<span style=\"color: #00b300\">OK</span>")
+  }
   
   n_notes <- length(which(check_status == "NOTE"))
   n_warnings <- length(which(check_status %in% c("WARN", "WARNING")))
@@ -202,7 +204,6 @@ cran_checks <- function(pkg) {
   } else {
     error <- NULL
   }
-
 
   out <- paste0(
     "<a href=\"", url, "\">",
