@@ -186,33 +186,29 @@ cran_checks <- function(pkg) {
   n_errors <- length(which(check_status == "ERROR"))
 
   if (n_notes > 0) {
-    color_note <- "<span style=\"color: blue\">"
+    note <- paste0("<span style=\"color: blue\">", n_notes, " Note", if (n_notes > 1) "s" else "", "</span>")
   } else {
-    color_note <- "<span style=\"color: black\">"
+    note <- NULL
   }
 
   if (n_warnings > 0) {
-    color_warning <- paste0("<span style=\"color: ", gh_colors$red, "\">")
+    warning <- paste0("<span style=\"color: orange\">", n_warnings, " Warning", if (n_warnings > 1) "s" else "", "</span>")
   } else {
-    color_warning <- "<span style=\"color: black\">"
+    warning <- NULL
   }
 
   if (n_errors > 0) {
-    color_error <- paste0("<span style=\"color: ", gh_colors$red, "\">")
+    error <- paste0("<span style=\"color: red\">", n_errors, " Error", if (n_errors > 1) "s" else "", "</span>")
   } else {
-    color_error <- "<span style=\"color: black\">"
+    error <- NULL
   }
 
 
   out <- paste0(
-    color_note, n_notes, " Note", if (n_notes > 1) "s" else "", "</span><br>",
-    color_warning, n_warnings, " Warning", if (n_warnings > 1) "s" else "", "</span><br>",
-    color_error, n_errors, " Error", if (n_errors > 1) "s" else "", "</span><br>"
+    "<a href=\"", url, "\">",
+    datawizard::text_concatenate(c(note, warning, error), last = ", "),
+    "</a></em><br>"
   )
-
-  if ((n_notes + n_warnings + n_errors) > 0) {
-    out <- paste0(out, "<em><a href=\"", url, "\">&lt;webpage&gt;&#x1f517;</a></em><br>")
-  }
 
   out
 }
