@@ -256,7 +256,7 @@ for (i in seq_along(repo_summary$repo)) {
 downloads <- data.frame(
   package = repo_summary$repo,
   `Number of downloads` = paste0(
-    '<a rel="noopener" target="_blank" href="https://codecov.io/gh/easystats/insight"><img src="https://cranlogs.r-pkg.org/badges/grand-total/', repo_summary$repo, '"></a>'
+    '<a rel="noopener" target="_blank" href="https://cranlogs.r-pkg.org/badges/grand-total/', repo_summary$repo, '"><img src="https://cranlogs.r-pkg.org/badges/grand-total/', repo_summary$repo, '"></a>'
   ),
   check.names = FALSE
 )
