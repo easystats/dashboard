@@ -247,12 +247,20 @@ for (i in seq_along(repo_summary$repo)) {
 }
 
 ### Get number of downloads in last 7 days
-downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>% 
-  group_by(package) %>% 
-  mutate(downloads_last_week = sum(count)) %>% 
-  ungroup() %>% 
-  select(package, downloads_last_week) %>% 
-  distinct()
+# downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>% 
+#   group_by(package) %>% 
+#   mutate(downloads_last_week = sum(count)) %>% 
+#   ungroup() %>% 
+#   select(package, downloads_last_week) %>% 
+#   distinct()
+downloads <- data.frame(
+  package = repo_summary$repo,
+  `Number of downloads` = paste0(
+    '<a rel="noopener" target="_blank" href="https://codecov.io/gh/easystats/insight"><img src="https://cranlogs.r-pkg.org/badges/grand-total/', repo_summary$repo, '"></a>'
+  ),
+  check.names = FALSE
+)
+
 
 ### Get coverage info
 coverage <- data.frame(
@@ -277,7 +285,7 @@ repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %
     "Open PRs" = prs,
     Stars = watchers,
     "Open issues" = open_issues,
-    "Downloads last week" = downloads_last_week,
+    # "Downloads last week" = downloads_last_week,
     Coverage = coverage_badge,
     `R CMD check` = check_badge
   ) %>% 
@@ -295,6 +303,9 @@ reactable(
       format = colFormat(separators = TRUE)
     ),
     `Weeks since last CRAN update` = colDef(
+      html = TRUE
+    ),
+    `Number of downloads` = colDef(
       html = TRUE
     ),
     `CRAN checks` = colDef(
