@@ -105,7 +105,17 @@ wait_for_rate(280)
 # Requires ~500 points for rate limitation
 pr_data <- tryCatch(
   map_dfr(orgs, org_pr, privacy = privacy),
-  error = function(e) message(e$content$errors))
+  error = function(e) message(e$content$errors)
+)
+
+# If previous request failed because of timeout, try one more time. If another 
+# error just remove the PR tab
+if (is.null(pr_data)) {
+  pr_data <- tryCatch(
+    map_dfr(orgs, org_pr, privacy = privacy),
+    error = function(e) message(e$content$errors)
+  )
+}
 
 if (!is.null(pr_data)) {
   prs <- pr_data %>% 
@@ -123,10 +133,12 @@ if (!is.null(pr_data)) {
   pr_authors <- prs %>% group_by(author, is_closed) %>% select(-reviewer) %>% unique() %>% tally(sort = TRUE)
   pr_reviewers <- prs %>% group_by(reviewer, is_closed) %>% select(-author) %>% unique() %>% tally(sort = TRUE)
   pr_pairs <- prs %>% group_by(author, reviewer, is_closed) %>% tally(sort = TRUE)
+  show_PR_tab <- TRUE
 } else {
   pr_authors <- NULL
   pr_reviewers <- NULL
   pr_pairs <- NULL
+  show_PR_tab <- FALSE
 }
 
 # Get remaining rate
@@ -461,7 +473,7 @@ reactable(
 
 Open PRs
 ===========
-```{r pr_summary}
+```{r pr_summary, eval=show_PR_tab}
 prs <- pr_data %>% 
   filter(is.na(closed)) %>% 
   mutate(n_comments = unlist(map(comments, nrow)))
