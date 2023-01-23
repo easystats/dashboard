@@ -4,8 +4,8 @@ on:
   pull_request:
     branches: [main, master]
   schedule:
-    # every day, every 6 hours
-    - cron: '0 0/6 * * *'
+    # every day, every 8 hours
+    - cron: '0 0/8 * * *'
 
 jobs:
   build:
