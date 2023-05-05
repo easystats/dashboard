@@ -1,6 +1,6 @@
 Package: dashboard
 Title: {{ Title }}
-Version: 1.0.0
+Version: 1.0.0 
 Authors@R: 
     person(given = "Etienne",
            family = "Bacher",
