@@ -42,6 +42,6 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.PAT_DASHBOARD }}
+          github_token: ${{ secrets.REM_DASHBOARD }}
           publish_dir: ./public
           force_orphan: true
