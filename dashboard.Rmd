@@ -24,6 +24,7 @@ params:
     value: PUBLIC
     choices: [PUBLIC, PRIVATE, BOTH]
 title: "`r params$title`"	
+date: "Last updated: `r Sys.Date()`"
 ---
 
 ```{r setup, include = FALSE}
@@ -68,7 +69,7 @@ main_repos <- c("bayestestR", "correlation", "datawizard", "easystats", "effects
 #' @param required Required amount of points you need for the next step
 #' When using the built-in GITHUB_TOKEN in GitHub Actions, the rate limit is 1,000 requests per hour per repository
 wait_for_rate <- function(required = 100) {
-  
+
 # Rate limit ----
 ratelimit <- "query {
   viewer {
@@ -89,7 +90,7 @@ message("Rate value:", rate_value)
   if (rate_value[[1]]$rateLimit$remaining < required) {
     # remaining seconds
     remaining <- round(as.numeric(as.duration(as_datetime(rate_value[[1]]$rateLimit$resetAt) - now())))
-    
+
     message(paste("Let's wait a little", round(remaining/60), "minutes"))
     Sys.sleep(remaining)
   } else {
@@ -112,7 +113,7 @@ row_details <- function(index) {
   pkg <- packageDescription(main_repos[index])
   urls <- unlist(strsplit(gsub(",", " , ", pkg$URL[1], perl = TRUE), "[ \n]"))
   pkg$Author <- gsub("\\s*\\([^\\)]+\\)", "", pkg$Author)
-  
+
   pkg_field <- function(name, ...) {
     if (any(is.na(...))) NULL
     else tagList(div(class = "detail-label", name), ...)
@@ -144,11 +145,11 @@ cran_checks <- function(pkg) {
   html_page <- xml2::read_html(url)
   html_table <- rvest::html_table(html_page)
   check_status <- html_table[[1]]$Status
-  
+
   if (all(check_status == "OK")) {
     return("<span style=\"color: #00b300\">OK</span>")
   }
-  
+
   n_notes <- length(which(check_status == "NOTE"))
   n_warnings <- length(which(check_status %in% c("WARN", "WARNING")))
   n_errors <- length(which(check_status == "ERROR"))
@@ -183,8 +184,8 @@ cran_checks <- function(pkg) {
 # Get data on each repo
 repo_data <- map(orgs, org_data, privacy)
 
-repo_summary <- map_dfr(repo_data, "summary") %>% 
-  distinct(owner, repo, .keep_all = TRUE) %>% 
+repo_summary <- map_dfr(repo_data, "summary") %>%
+  distinct(owner, repo, .keep_all = TRUE) %>%
   filter(tolower(owner) %in% tolower(orgs), repo %in% main_repos) %>%
   select(-owner, -description, -p1, -features, -bugs, -unlabeled)
 
@@ -213,11 +214,11 @@ for (i in seq_along(repo_summary$repo)) {
 }
 
 ### Get number of downloads in last 7 days
-# downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>% 
-#   group_by(package) %>% 
-#   mutate(downloads_last_week = sum(count)) %>% 
-#   ungroup() %>% 
-#   select(package, downloads_last_week) %>% 
+# downloads <- cran_downloads(when = "last-week", packages = unique(repo_summary$repo)) %>%
+#   group_by(package) %>%
+#   mutate(downloads_last_week = sum(count)) %>%
+#   ungroup() %>%
+#   select(package, downloads_last_week) %>%
 #   distinct()
 downloads <- data.frame(
   package = repo_summary$repo,
@@ -237,12 +238,12 @@ coverage <- data.frame(
 
 
 ### Clean data and make table
-repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>% 
-  left_join(last_published_cran, by = "repo") %>% 
-  left_join(coverage, by = "repo") %>% 
+repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %>%
+  left_join(last_published_cran, by = "repo") %>%
+  left_join(coverage, by = "repo") %>%
   select(repo, last_published_cran, watchers, open_issues, prs, everything()) %>%
   select(-default_branch) %>%
-  relocate(n_weeks, checks, .after = last_published_cran) %>% 
+  relocate(n_weeks, checks, .after = last_published_cran) %>%
   rename(
     Repository = repo,
     "Last published on CRAN" = last_published_cran,
@@ -254,7 +255,7 @@ repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %
     # "Downloads last week" = downloads_last_week,
     Coverage = coverage_badge,
     `R CMD check` = check_badge
-  ) %>% 
+  ) %>%
   arrange(Repository)
 
 reactable(
@@ -340,34 +341,34 @@ substitute_emoji <- function(x) {
 
 issues <- map_dfr(repo_data, "issues") %>%
   distinct(owner, repo, issue, .keep_all = TRUE) %>%
-  filter(tolower(owner) %in% tolower(orgs)) %>% 
+  filter(tolower(owner) %in% tolower(orgs)) %>%
   select(-updated)
 
 issues_2 <- list()
 for (i in main_repos) {
-  issues_2[[i]] <- gh::gh("/repos/:repo/issues?state=open", repo = paste0("easystats/", i)) %>% 
+  issues_2[[i]] <- gh::gh("/repos/:repo/issues?state=open", repo = paste0("easystats/", i)) %>%
     tibble(
       repo = i,
-      author = map(., "user") %>% 
+      author = map(., "user") %>%
         map_chr(., "login"),
       created = map_chr(., "created_at"),
       updated = map_chr(., "updated_at"),
       issue = map_int(., "number")
-    ) %>% 
+    ) %>%
     select(-1)
 }
 issues_2 <- do.call(rbind, issues_2)
 
 # linkify the titles, and replace emoji
 issue_table <- issues %>%
-  left_join(issues_2, by = c("repo", "issue")) %>% 
+  left_join(issues_2, by = c("repo", "issue")) %>%
   mutate(
     title = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{title}</a>'),
     # Modify issue after title
     issue = glue::glue('<a rel="noopener" target="_blank" href="https://github.com/{owner}/{repo}/issues/{issue}">{issue}</a>'),
     labels = substitute_emoji(map_chr(labels, paste, collapse = ", "))
   ) %>%
-  select(repo, issue, title, author, created, updated, labels) %>% 
+  select(repo, issue, title, author, created, updated, labels) %>%
   rename(
     Repository = repo,
     Issue = issue,
@@ -383,7 +384,7 @@ issue_table <- issue_table[order(issue_table$Updated, decreasing = TRUE), ]
 reactable(
   issue_table,
   searchable = TRUE,
-  pagination = FALSE, 
+  pagination = FALSE,
   highlight = TRUE,
   filterable = TRUE,
   columns = list(
@@ -432,13 +433,13 @@ prs <- list()
 for (i in main_repos) {
   tmp <- gh::gh("/repos/:repo/pulls?state=OPEN", repo = paste0("easystats/", i))
   if (length(tmp) == 0) next
-  
+
   for (j in seq_along(tmp)) {
     prs[[paste0(i, "_", j)]] <- tibble(
       repo = i,
       issue = tmp[[j]]$number,
       title = tmp[[j]]$title,
-      url = tmp[[j]]$url,
+      url = tmp[[j]]$html_url,
       author = tmp[[j]]$user$login,
       created = tmp[[j]]$created_at,
       updated = tmp[[j]]$updated_at,
@@ -446,18 +447,18 @@ for (i in main_repos) {
       review_requested = as.logical(length(tmp[[j]]$requested_reviewers) > 0)
     )
   }
-  
+
 }
 prs <- do.call(rbind, prs)
 
-  
+
 pr_table <- prs %>%
   mutate(
     title = paste0("<a href='", url, "' target = '_blank'>", title, "</a>"),
     draft = ifelse(draft, "Yes", "No"),
     review_requested = ifelse(review_requested, "Yes", "No")
-  ) %>% 
-  select(repo, issue, title, author, created, updated, draft, review_requested) %>% 
+  ) %>%
+  select(repo, issue, title, author, created, updated, draft, review_requested) %>%
   rename(
     Repository = repo,
     PR = issue,
@@ -474,7 +475,7 @@ pr_table <- pr_table[order(pr_table$Updated, decreasing = TRUE), ]
 reactable(
   pr_table,
   searchable = TRUE,
-  pagination = FALSE, 
+  pagination = FALSE,
   highlight = TRUE,
   filterable = TRUE,
   columns = list(
