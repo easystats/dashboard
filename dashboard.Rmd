@@ -46,6 +46,8 @@ library(fontawesome)
 library(tidyversedashboard)
 library(tidyr)
 
+options(repos = c(CRAN='https://cloud.r-project.org'))
+
 gh_colors <- list(
   green = "#2cbe4e",
   red = "#CB2434",
@@ -96,43 +98,6 @@ message("Rate value:", rate_value)
 }
 ```
 
-
-```{r pr_stats, include=FALSE, message=FALSE}
-options(repos = c(CRAN='https://cloud.r-project.org'))
-
-wait_for_rate(280)
-
-# Requires ~500 points for rate limitation
-pr_data <- tryCatch(
-  map_dfr(orgs, org_pr, privacy = privacy),
-  error = function(e) message(e$content$errors)
-)
-
-if (!is.null(pr_data)) {
-  prs <- pr_data %>% 
-    filter(updated >= dashboard_start) %>%
-    mutate(reviewer = map2(reviews, comments, function(reviews, comments) unique(c(reviews$reviewer, comments$commenter)))) 
-  prs <- prs %>%
-    select(owner, repo, issue, author, created, updated, closed, reviewer) %>%
-    unnest(cols = c(reviewer)) %>%
-    filter(reviewer != author, reviewer != "codecov.io") %>%
-    mutate(
-      reviewer = github_user_home(reviewer),
-      author = github_user_home(author),
-      is_closed = !is.na(closed))
-
-  pr_authors <- prs %>% group_by(author, is_closed) %>% select(-reviewer) %>% unique() %>% tally(sort = TRUE)
-  pr_reviewers <- prs %>% group_by(reviewer, is_closed) %>% select(-author) %>% unique() %>% tally(sort = TRUE)
-  pr_pairs <- prs %>% group_by(author, reviewer, is_closed) %>% tally(sort = TRUE)
-} else {
-  pr_authors <- NULL
-  pr_reviewers <- NULL
-  pr_pairs <- NULL
-}
-
-# Get remaining rate
-wait_for_rate(1)
-```
 
 
 Overview
@@ -463,32 +428,36 @@ reactable(
 Open PRs
 ===========
 ```{r pr_summary}
-prs <- pr_data %>% 
-  filter(is.na(closed)) %>% 
-  mutate(n_comments = unlist(map(comments, nrow)))
-
-prs_2 <- list()
+prs <- list()
 for (i in main_repos) {
-  prs_2[[i]] <- gh::gh("/repos/:repo/pulls?state=OPEN", repo = paste0("easystats/", i)) %>% 
-    tibble(
+  tmp <- gh::gh("/repos/:repo/pulls?state=OPEN", repo = paste0("easystats/", i))
+  if (length(tmp) == 0) next
+  
+  for (j in seq_along(tmp)) {
+    prs[[paste0(i, "_", j)]] <- tibble(
       repo = i,
-      number = map_int(., "number"),
-      title = map_chr(., "title"),
-      url = map_chr(., "html_url"),
-      draft = as.logical(map_chr(., "draft"))
-    ) %>% 
-    select(-1)
+      issue = tmp[[j]]$number,
+      title = tmp[[j]]$title,
+      url = tmp[[j]]$url,
+      author = tmp[[j]]$user$login,
+      created = tmp[[j]]$created_at,
+      updated = tmp[[j]]$updated_at,
+      draft = as.logical(tmp[[j]]$draft),
+      review_requested = as.logical(length(tmp[[j]]$requested_reviewers) > 0)
+    )
+  }
+  
 }
-prs_2 <- do.call(rbind, prs_2)
+prs <- do.call(rbind, prs)
 
   
 pr_table <- prs %>%
-  left_join(prs_2, by = c("repo", "issue" = "number")) %>% 
   mutate(
     title = paste0("<a href='", url, "' target = '_blank'>", title, "</a>"),
-    draft = ifelse(draft, "Yes", "No")
+    draft = ifelse(draft, "Yes", "No"),
+    review_requested = ifelse(review_requested, "Yes", "No")
   ) %>% 
-  select(repo, issue, title, author, created, updated, n_comments, draft) %>% 
+  select(repo, issue, title, author, created, updated, draft, review_requested) %>% 
   rename(
     Repository = repo,
     PR = issue,
@@ -496,8 +465,8 @@ pr_table <- prs %>%
     Author = author,
     Created = created,
     Updated = updated,
-    "# of comments" = n_comments,
-    Draft = draft
+    Draft = draft,
+    "Review requested" = review_requested
   )
 
 pr_table <- pr_table[order(pr_table$Updated, decreasing = TRUE), ]
