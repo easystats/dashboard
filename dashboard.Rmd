@@ -264,6 +264,10 @@ repo_summary <- left_join(repo_summary, downloads, by = c("repo" = "package")) %
   ) %>%
   arrange(Repository)
 
+if ("topics" %in% colnames(repo_summary)) {
+  repo_summary <- select(repo_summary, -topics)
+}
+
 reactable(
   repo_summary,
   defaultPageSize = nrow(repo_summary),
