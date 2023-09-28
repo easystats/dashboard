@@ -13,7 +13,6 @@ URL: {{ URL }}
 BugReports: {{ BugReports }}
 Imports: 
     cranlogs,
-    dplyr,
     easystats,
     emo,
     flexdashboard,
@@ -23,14 +22,9 @@ Imports:
     glue,
     htmltools,
     httr2,
-    jsonlite,
-    lubridate,
-    purrr,
     reactable,
     rmarkdown,
-    scales,
-    tibble,
-    tidyr,
+    tidyverse,
     tidyversedashboard
 Remotes:
     thinkR-open/tidyversedashboard@more-options,
