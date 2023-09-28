@@ -47,20 +47,22 @@ library(fontawesome)
 library(tidyversedashboard)
 library(tidyr)
 
-options(repos = c(CRAN='https://cloud.r-project.org'))
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 gh_colors <- list(
   green = "#2cbe4e",
   red = "#CB2434",
-  purple = "#6f42c1")
+  purple = "#6f42c1"
+)
 dashboard_start <- params$dashboard_start
 dashboard_duration <- format(today() - dashboard_start, format = "%d")
 orgs <- scan(text = params$orgs, what = "character", sep = ",", strip.white = TRUE, quiet = TRUE)
 privacy <- normalize_privacy(params$privacy)
 
-main_repos <- c("bayestestR", "correlation", "datawizard", "easystats", "effectsize", "insight",
-                "modelbased", "parameters", "performance", "report", "see")
-
+main_repos <- c(
+  "bayestestR", "correlation", "datawizard", "easystats", "effectsize", "insight",
+  "modelbased", "parameters", "performance", "report", "see"
+)
 ```
 
 ```{r remaining, message=FALSE}
@@ -69,9 +71,8 @@ main_repos <- c("bayestestR", "correlation", "datawizard", "easystats", "effects
 #' @param required Required amount of points you need for the next step
 #' When using the built-in GITHUB_TOKEN in GitHub Actions, the rate limit is 1,000 requests per hour per repository
 wait_for_rate <- function(required = 100) {
-
-# Rate limit ----
-ratelimit <- "query {
+  # Rate limit ----
+  ratelimit <- "query {
   viewer {
     login
   }
@@ -83,15 +84,15 @@ ratelimit <- "query {
   }
 }"
 
-rate_value <- gh::gh_gql(ratelimit)
+  rate_value <- gh::gh_gql(ratelimit)
 
-message("Rate value:", rate_value)
+  message("Rate value:", rate_value)
 
   if (rate_value[[1]]$rateLimit$remaining < required) {
     # remaining seconds
     remaining <- round(as.numeric(as.duration(as_datetime(rate_value[[1]]$rateLimit$resetAt) - now())))
 
-    message(paste("Let's wait a little", round(remaining/60), "minutes"))
+    message(paste("Let's wait a little", round(remaining / 60), "minutes"))
     Sys.sleep(remaining)
   } else {
     message("Rate's good")
@@ -115,8 +116,11 @@ row_details <- function(index) {
   pkg$Author <- gsub("\\s*\\([^\\)]+\\)", "", pkg$Author)
 
   pkg_field <- function(name, ...) {
-    if (any(is.na(...))) NULL
-    else tagList(div(class = "detail-label", name), ...)
+    if (any(is.na(...))) {
+      NULL
+    } else {
+      tagList(div(class = "detail-label", name), ...)
+    }
   }
 
   detail <- div(
@@ -130,9 +134,13 @@ row_details <- function(index) {
     pkg_field("Author", pkg$Author),
     pkg_field("License", pkg$License),
     pkg_field("URL", lapply(urls, function(url) {
-      if (grepl("https?://", url)) tags$a(href = url, url)
-      else if (identical(url, ",")) ", "
-      else url
+      if (grepl("https?://", url)) {
+        tags$a(href = url, url)
+      } else if (identical(url, ",")) {
+        ", "
+      } else {
+        url
+      }
     }))
   )
 
@@ -196,7 +204,7 @@ last_published_cran <- data.frame(
 
 for (i in seq_along(repo_summary$repo)) {
   cran_page <- readLines(paste0("https://cran.r-project.org/web/packages/", repo_summary$repo[i], "/index.html"))
-  date <- cran_page[which(startsWith(cran_page, "<td>Published"))+1]
+  date <- cran_page[which(startsWith(cran_page, "<td>Published")) + 1]
   date <- gsub("<td>", "", date)
   date <- gsub("</td>", "", date)
   last_published_cran[i, "last_published_cran"] <- date
@@ -326,7 +334,6 @@ reactable(
   ),
   class = "packages-table"
 )
-
 ```
 
 
@@ -447,7 +454,6 @@ for (i in main_repos) {
       review_requested = as.logical(length(tmp[[j]]$requested_reviewers) > 0)
     )
   }
-
 }
 prs <- do.call(rbind, prs)
 
@@ -514,4 +520,3 @@ reactable(
   )
 )
 ```
-
