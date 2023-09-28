@@ -28,8 +28,6 @@ date: "Last updated: `r Sys.Date()`"
 ---
 
 ```{r setup, include = FALSE}
-# knitr::opts_chunk$set(eval = FALSE, cache = TRUE)
-
 library(cranlogs)
 library(htmltools)
 library(httr2)
