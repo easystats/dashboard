@@ -341,6 +341,11 @@ reactable(
 Workflow status
 ===========
 
+```{r workflow_status}
+workflow_status <- readRDS("badge_url_data.rds")
+
+reactable(workflow_status, )
+```
 
 
 Open issues
