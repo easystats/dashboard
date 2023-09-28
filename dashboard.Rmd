@@ -359,7 +359,10 @@ reactable(
     report = colDef(html = TRUE),
     see = colDef(html = TRUE)
   ),
-  static = TRUE
+  static = TRUE,
+  highlight = TRUE,
+  defaultPageSize = 25L,
+  resizable = TRUE
 )
 ```
 
