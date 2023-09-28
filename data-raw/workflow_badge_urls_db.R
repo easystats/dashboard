@@ -38,7 +38,8 @@ generate_workflow_status_badge_urls <- function(username, repository) {
 
   generate_url <- function(workflow) {
     badge_url <- glue::glue("https://github.com/{username}/{repository}/workflows/{workflow}/badge.svg")
-    glue::glue('<a href={badge_url} class="badge-link"><img src={badge_url} alt="{workflow}"></a>')
+    actions_portal_url <- glue::glue("https://github.com/{username}/{repository}/actions/workflows/{workflow}.yaml")
+    glue::glue('<a href={actions_portal_url} class="badge-link"><img src={badge_url} alt="{workflow}"></a>')
   }
 
   unname(vapply(main_workflows, generate_url, FUN.VALUE = character(1L)))
