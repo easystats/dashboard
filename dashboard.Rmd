@@ -290,16 +290,12 @@ reactable(
     ),
     Coverage = colDef(
       html = TRUE,
-      cell = JS("function(cellInfo) {
-        return cellInfo.value
-      }")
+      cell = JS("(cellInfo) => cellInfo.value")
     ),
     `R CMD check` = colDef(
       minWidth = 100,
       html = TRUE,
-      cell = JS("function(cellInfo) {
-        return cellInfo.value
-      }")
+      cell = JS("(cellInfo) => cellInfo.value")
     )
   ),
   details = row_details,
@@ -364,7 +360,10 @@ Open issues
 ```{r issue_summary}
 substitute_emoji <- function(x) {
   m <- gregexpr(":[^[:space:]]+:", x)
-  regmatches(x, m) <- lapply(regmatches(x, m), function(xx) map_chr(gsub(":", "", xx), purrr::possibly(emo::ji, "")))
+  regmatches(x, m) <- lapply(
+    regmatches(x, m),
+    function(xx) map_chr(gsub(":", "", xx), purrr::possibly(emo::ji, ""))
+  )
   x
 }
 
@@ -378,8 +377,7 @@ for (i in main_repos) {
   issues_2[[i]] <- gh::gh("/repos/:repo/issues?state=open", repo = paste0("easystats/", i)) %>%
     tibble(
       repo = i,
-      author = map(., "user") %>%
-        map_chr(., "login"),
+      author = map(., "user") %>% map_chr(., "login"),
       created = map_chr(., "created_at"),
       updated = map_chr(., "updated_at"),
       issue = map_int(., "number")
