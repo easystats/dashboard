@@ -2,10 +2,11 @@ Package: dashboard
 Title: {{ Title }}
 Version: 1.0.0 
 Authors@R: 
-    person(given = "Etienne",
-           family = "Bacher",
-           role = c("aut", "cre"),
-           email = "etienne.bacher@protonmail.com")
+    c(person(given = "Etienne",
+             family = "Bacher",
+             role = c("aut", "cre"),
+             email = "etienne.bacher@protonmail.com"))
+Maintainer: Etienne Bacher <etienne.bacher@protonmail.com>
 Description: {{ Description }}
 License: MIT + file LICENSE
 URL: {{ URL }}
