@@ -34,17 +34,11 @@ extract_main_workflows <- function(workflows) {
 generate_workflow_status_badge_urls <- function(username, repository) {
   workflows <- extract_gha_workflows(username, repository)
   main_workflows <- extract_main_workflows(workflows)
+  main_workflow_names <<- main_workflows
 
   generate_url <- function(workflow) {
-    paste0(
-      "https://github.com/",
-      username,
-      "/",
-      repository,
-      "/workflows/",
-      workflow,
-      "/badge.svg"
-    )
+    badge_url <- glue::glue("https://github.com/{username}/{repository}/workflows/{workflow}/badge.svg")
+    glue::glue('<a href={badge_url} class="badge-link"><img src={badge_url} alt="{workflow}"></a>')
   }
 
   unname(vapply(main_workflows, generate_url, FUN.VALUE = character(1L)))
@@ -52,7 +46,6 @@ generate_workflow_status_badge_urls <- function(username, repository) {
 
 easystats_packages <- easystats:::.packages_on_cran()
 url_list <- purrr::map(easystats_packages, ~ generate_workflow_status_badge_urls("easystats", .x))
-
-url_df <- purrr::set_names(url_list, easystats_packages) |> as.data.frame()
-
+url_df <- as.data.frame(purrr::set_names(url_list, easystats_packages))
+url_df <- dplyr::mutate(url_df, workflow = main_workflow_names, .before = 1L)
 saveRDS(url_df, "badge_url_data.rds")
