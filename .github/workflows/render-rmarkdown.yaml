@@ -7,6 +7,10 @@ on:
     # every day, every 8 hours
     - cron: '0 0/8 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: macos-latest
