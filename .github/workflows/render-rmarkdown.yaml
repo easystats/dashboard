@@ -7,6 +7,10 @@ on:
     # every day, every 8 hours
     - cron: '0 0/8 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: macos-latest
@@ -22,20 +26,11 @@ jobs:
         uses: r-lib/actions/setup-r@v2
 
       - uses: r-lib/actions/setup-pandoc@v2
-
-      - name: Query dependencies
-        run: |
-          install.packages('remotes')
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
-          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
-        shell: Rscript {0}
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
 
       - name: Render Rmarkdown files
         run: |
-          install.packages(c("cranlogs", "rvest", "xml2", "htmltools", "httr2", "flexdashboard", "gh", "jsonlite", "lubridate", "dplyr", "purrr", "tibble", "reactable", "fontawesome", "tidyversedashboard", "tidyr"))
-          remotes::install_github("ThinkR-open/tidyversedashboard", ref = "zero-issues")
-          remotes::install_github("hadley/emo")
-          install.packages("easystats", repos = "https://easystats.r-universe.dev")
           rmarkdown::render("dashboard.Rmd", output_dir = "public")
         shell: Rscript {0}
 
