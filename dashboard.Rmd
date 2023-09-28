@@ -346,18 +346,9 @@ workflow_status <- readRDS("badge_url_data.rds")
 
 reactable(
   workflow_status,
-  columns = list(
-    bayestestR = colDef(html = TRUE),
-    correlation = colDef(html = TRUE),
-    datawizard = colDef(html = TRUE),
-    easystats = colDef(html = TRUE),
-    effectsize = colDef(html = TRUE),
-    insight = colDef(html = TRUE),
-    modelbased = colDef(html = TRUE),
-    parameters = colDef(html = TRUE),
-    performance = colDef(html = TRUE),
-    report = colDef(html = TRUE),
-    see = colDef(html = TRUE)
+  defaultColDef = colDef(
+    align = "center",
+    html = TRUE
   ),
   static = TRUE,
   highlight = TRUE,
