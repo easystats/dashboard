@@ -337,6 +337,7 @@ reactable(
 
 Open issues
 ===========
+
 ```{r issue_summary}
 substitute_emoji <- function(x) {
   m <- gregexpr(":[^[:space:]]+:", x)
@@ -433,6 +434,7 @@ reactable(
 
 Open PRs
 ===========
+
 ```{r pr_summary}
 prs <- list()
 for (i in main_repos) {
