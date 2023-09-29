@@ -1,16 +1,22 @@
 Package: dashboard
-Title: {{ Title }}
+Title: Dashboard about status of {easystats} packages
 Version: 1.0.0 
 Authors@R: 
     c(person(given = "Etienne",
              family = "Bacher",
              role = c("aut", "cre"),
-             email = "etienne.bacher@protonmail.com"))
+             email = "etienne.bacher@protonmail.com"),
+      person(given = "Indrajeet",
+             family = "Patil",
+             role = c("aut"),
+             email = "patilindrajeet.science@gmail.com",
+             comment = c(ORCID = "0000-0003-1995-6531", Twitter = "@patilindrajeets")))
 Maintainer: Etienne Bacher <etienne.bacher@protonmail.com>
 Description: {{ Description }}
 License: MIT + file LICENSE
-URL: {{ URL }}
-BugReports: {{ BugReports }}
+URL: https://easystats.github.io/dashboard/dashboard.html,
+    https://github.com/easystats/dashboard/
+BugReports: https://github.com/easystats/dashboard/issues
 Imports: 
     cranlogs,
     easystats,
