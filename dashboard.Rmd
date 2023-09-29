@@ -27,23 +27,19 @@ title: "`r params$title`"
 date: "Last updated: `r Sys.Date()`"
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 library(cranlogs)
 library(htmltools)
 library(httr2)
 library(flexdashboard)
 library(emo)
 library(gh)
-library(jsonlite)
-library(lubridate)
-library(dplyr)
-library(purrr)
-library(tibble)
+library(tidyverse)
 # remotes::install_github("ThinkR-open/tidyversedashboard", ref = "zero-issues")
 library(reactable)
 library(fontawesome)
 library(tidyversedashboard)
-library(tidyr)
+library(xml2)
 
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
@@ -337,16 +333,60 @@ reactable(
 Workflow status
 ===========
 
-```{r workflow_status}
-workflow_status <- readRDS("badge_url_data.rds")
+```{r workflow_status_helpers, include = FALSE}
+workflow_status <- readRDS("badge_url_data.rds") %>% as_tibble()
 
+extract_workflow_status <- function(url) {
+  response <- httr::GET(url)
+
+  # check response status
+  if (httr::http_status(response)$category != "Success") {
+    stop("Failed to fetch workflow status badge. Check your credentials and URL.")
+  }
+
+  content <- httr::content(response, as = "text")
+
+  # Check if the word "passing" or "failing" appears anywhere in the HTML
+
+  if (grepl("passing", content)) {
+    return("✅")
+  } else if (grepl("failing", content)) {
+    return("❌")
+  } else {
+    return("❔")
+  }
+}
+
+update_url_string_with_status <- function(html_string) {
+  # Parse the HTML string
+  parsed_html <- xml2::read_html(html_string)
+
+  # Extract the href attribute value
+  href_value <- xml2::xml_attr(xml2::xml_find_first(parsed_html, "//img"), "src")
+
+  replacement_text <- extract_workflow_status(href_value)
+
+  # Regex to match the image HTML element
+  img_regex <- "<img[^>]*>"
+
+  modified_string <- gsub(img_regex, replacement_text, html_string)
+
+  return(modified_string)
+}
+
+workflow_status <-
+  workflow_status %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(dplyr::across(.cols = -dplyr::matches("workflow"), update_url_string_with_status))
+```
+
+```{r workflow_status}
 reactable(
   workflow_status,
   defaultColDef = colDef(
     align = "center",
     html = TRUE
   ),
-  static = TRUE,
   highlight = TRUE,
   defaultPageSize = 25L,
   resizable = TRUE
