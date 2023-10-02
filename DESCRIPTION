@@ -1,4 +1,4 @@
-Package: easystatsdashboard
+Package: dashboard
 Title: Dashboard about status of {easystats} packages
 Version: 1.0.0 
 Authors@R: 

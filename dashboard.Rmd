@@ -336,7 +336,7 @@ Workflow status
 ```{r workflow_status_helpers, include = FALSE}
 badge_url_data_generator_script <- system.file(
   "raw-scripts", "workflow_badge_urls_db.R",
-  package = "easystatsdashboard"
+  package = "dashboard"
 )
 source(badge_url_data_generator_script, local = knitr::knit_global())
 
