@@ -338,9 +338,9 @@ badge_url_data_generator_script <- system.file(
   "raw-scripts", "workflow_badge_urls_db.R",
   package = "easystatsdashboard"
 )
-callr::rscript(badge_url_data_generator_script)
+source(badge_url_data_generator_script, local = knitr::knit_global())
 
-workflow_status <- readRDS("badge_url_data.rds") %>% as_tibble()
+workflow_status <- url_df %>% as_tibble()
 
 extract_workflow_status <- function(url) {
   response <- httr::GET(url)
