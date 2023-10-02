@@ -334,6 +334,7 @@ Workflow status
 ===========
 
 ```{r workflow_status_helpers, include = FALSE}
+callr::rscript("./data-raw/workflow_badge_urls_db.R")
 workflow_status <- readRDS("badge_url_data.rds") %>% as_tibble()
 
 extract_workflow_status <- function(url) {
