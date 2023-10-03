@@ -352,8 +352,6 @@ extract_workflow_status <- function(url) {
 
   content <- httr::content(response, as = "text")
 
-  # Check if the word "passing" or "failing" appears anywhere in the HTML
-
   if (grepl("passing", content)) {
     return("✅")
   } else if (grepl("failing", content)) {
