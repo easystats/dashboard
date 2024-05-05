@@ -25,7 +25,8 @@ extract_main_workflows <- function(workflows) {
     "pre-commit",
     "revdepcheck",
     "test-coverage-examples",
-    "update-to-latest-easystats"
+    "update-to-latest-easystats",
+    "R-CMD-check-strict" # this was removed for good
   )
 
   setdiff(workflows, workflows_not_run_on_main)
