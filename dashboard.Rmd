@@ -330,10 +330,10 @@ reactable(
 )
 ```
 
-Workflow status
-===========
+<!-- Workflow status -->
+<!-- =========== -->
 
-```{r workflow_status_helpers, include = FALSE}
+```{r workflow_status_helpers, include = FALSE, eval=FALSE}
 workflow_status <- readRDS("badge_url_data.rds") %>% as_tibble()
 
 extract_workflow_status <- function(url) {
@@ -378,7 +378,7 @@ workflow_status <-
   dplyr::mutate(dplyr::across(.cols = -dplyr::matches("workflow"), update_url_string_with_status))
 ```
 
-```{r workflow_status}
+```{r workflow_status, eval=FALSE}
 reactable(
   workflow_status,
   defaultColDef = colDef(
