@@ -24,7 +24,7 @@ params:
     value: PUBLIC
     choices: [PUBLIC, PRIVATE, BOTH]
 title: "`r params$title`"	
-date: "Last updated: `r Sys.Date()`"
+date: "Last updated: `r Sys.time()`"
 ---
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
