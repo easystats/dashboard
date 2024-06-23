@@ -24,7 +24,7 @@ params:
     value: PUBLIC
     choices: [PUBLIC, PRIVATE, BOTH]
 title: "`r params$title`"	
-date: "Last updated: `r Sys.time()`"
+date: "Last updated: `r lubridate::now()`"
 ---
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
