@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-<a href = "https://github.com/easystats/dashboard/actions" target = "_blank"><img src="https://github.com/easystats/dashboard/actions/workflows/render-dashboard/badge.svg"></a>
+<a href = "https://github.com/easystats/dashboard/actions" target = "_blank"><img src="https://github.com/easystats/dashboard/actions/workflows/render-dashboard.yaml/badge.svg"></a>
 
 <!-- badges: end -->
 
