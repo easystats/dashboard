@@ -4,6 +4,9 @@
 # {dashboard}
 
 <!-- badges: start -->
+
+<a href = "https://github.com/easystats/dashboard/actions" target = "_blank"><img src="https://github.com/easystats/dashboard/actions/workflows/render-dashboard/badge.svg"></a>
+
 <!-- badges: end -->
 
 The goal of {dashboard} is to present an overview of open-source
