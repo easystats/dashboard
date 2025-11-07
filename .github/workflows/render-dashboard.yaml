@@ -1,3 +1,5 @@
+name: render-dashboard
+
 on:
   push:
     branches: [main, master]
