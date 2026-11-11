@@ -6,24 +6,7 @@ output:
     theme: yeti
     css: "style.css"
     source_code: "https://github.com/easystats/dashboard"
-params:
-  title:
-    label: Title of report
-    value: Easystats dashboard
-    input: text
-  dashboard_start: 
-    label: Start date of report
-    value: !r lubridate::today() - lubridate::ddays(90)
-    input: date
-  orgs:
-    label: GitHub organizations
-    value: easystats
-    input: text
-  privacy:
-    label: Repository Privacy
-    value: PUBLIC
-    choices: [PUBLIC, PRIVATE, BOTH]
-title: "`r params$title`"	
+title: "Easystats dashboard"	
 date: "Last updated: `r as.character(format(Sys.time()))`"
 ---
 
@@ -48,10 +31,10 @@ gh_colors <- list(
   red = "#CB2434",
   purple = "#6f42c1"
 )
-dashboard_start <- params$dashboard_start
+dashboard_start <- lubridate::today() - lubridate::ddays(90)
 dashboard_duration <- format(today() - dashboard_start, format = "%d")
-orgs <- scan(text = params$orgs, what = "character", sep = ",", strip.white = TRUE, quiet = TRUE)
-privacy <- normalize_privacy(params$privacy)
+orgs <- scan(text = "easystats", what = "character", sep = ",", strip.white = TRUE, quiet = TRUE)
+privacy <- normalize_privacy("PUBLIC")
 
 main_repos <- c(
   "bayestestR", "correlation", "datawizard", "easystats", "effectsize", "insight",
@@ -183,8 +166,39 @@ cran_checks <- function(pkg) {
   out
 }
 
+parse_summary_repository <- function (x) {
+    tibble::tibble(owner = x$owner$login, repo = x$repo, default_branch = ifelse(is.null(x$defaultBranchRef), 
+        "", x$defaultBranchRef$name), prs = x$prs$totalCount, 
+        watchers = x$watchers$totalCount, open_issues = x$open_issues$totalCount, 
+        description = list(desc::desc(text = x$DESCRIPTION$text %||% 
+            character())))
+}
+
+org_data <- function (org, privacy = c("PUBLIC", "PRIVATE", "BOTH")) {
+    privacy <- tidyversedashboard:::normalize_privacy(privacy)
+    res <- tidyversedashboard:::paginate(function(cursor, ...) tidyversedashboard:::graphql_query("repo_summary.graphql", 
+        org = org, cursor = cursor, privacy = privacy))
+    summary <- map_dfr(res, function(x) map_dfr(x$repositoryOwner$repositories$nodes, 
+        parse_summary_repository))
+    issues <- map_dfr(res, function(x) map_dfr(x$repositoryOwner$repositories$nodes, 
+        tidyversedashboard:::parse_issues_repository))
+    if (nrow(issues) == 0) {
+        issues <- issues %>% add_row() %>% mutate(owner = org, 
+            repo = NA)
+    }
+    num_label <- tidyversedashboard:::num_label
+    summary <- left_join(summary, issues %>% group_by(owner, 
+        repo) %>% summarize(p1 = sum(p1), bugs = num_label(labels, 
+        "bug"), features = num_label(labels, "feature"), unlabeled = sum(lengths(labels) == 
+        0))) %>% replace_na(list(p1 = 0, bugs = 0, features = 0, 
+        unlabeled = 0))
+    list(summary = summary, issues = issues)
+}
+
 # Get data on each repo
-repo_data <- map(orgs, org_data, privacy)
+repo_data <- map(orgs, \(x) {
+  org_data(x, privacy)
+})
 
 repo_summary <- map_dfr(repo_data, "summary") %>%
   distinct(owner, repo, .keep_all = TRUE) %>%
